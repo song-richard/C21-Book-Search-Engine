@@ -34,7 +34,7 @@ const connectToApollo = async () => {
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     });
-  }
+  };
   
   app.use('/graphql', expressMiddleware(server,{
     context: authMiddleware
@@ -47,3 +47,5 @@ const connectToApollo = async () => {
     });
   });
 };
+
+connectToApollo();
