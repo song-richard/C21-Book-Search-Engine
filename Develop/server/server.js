@@ -17,8 +17,12 @@ const PORT = process.env.PORT || 3001;
 //New instance of Apollo Server
 const server = new ApolloServer({
   typeDefs,
-  resolvers
+  resolvers,
+  context: authMiddleware
 });
+
+//Apply Apollo Server as middleware to E xpress app
+server.applyMiddleware({ app });
 
 //Establish connection with Apollo Server
 const connectToApollo = async () => {
@@ -36,9 +40,10 @@ const connectToApollo = async () => {
     });
   };
   
-  app.use('/graphql', expressMiddleware(server,{
+  app.use('/graphql', expressMiddleware(server, {
     context: authMiddleware
-  }));
+  })
+  );
 
   db.once('open', () => {
     app.listen(PORT, () => {
