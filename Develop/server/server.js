@@ -5,7 +5,6 @@ const routes = require('./routes');
 
 //Apollo Server
 const { ApolloServer } = require('apollo-server-express');
-const { expressMiddleware } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
 //Auth
@@ -21,36 +20,31 @@ const server = new ApolloServer({
   context: authMiddleware
 });
 
-//Apply Apollo Server as middleware to E xpress app
-server.applyMiddleware({ app });
-
 //Establish connection with Apollo Server
 const connectToApollo = async () => {
   await server.start();
+  // Apply Apollo Server as middleware to Express app
+  server.applyMiddleware({ app });
+};
 
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
   
-  // if we're in production, serve client/build as static assets
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
-    
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-    });
-  };
+// if we're in production, serve client/build as static assets
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
   
-  app.use('/graphql', expressMiddleware(server, {
-    context: authMiddleware
-  })
-  );
-
-  db.once('open', () => {
-    app.listen(PORT, () => {
-      console.log(`API server running on port ${PORT}!`);
-      console.log(`GraphQL started on: http://localhost:${PORT}/graphql`);
-    });
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
   });
 };
 
-connectToApollo();
+// Call connectToApollo function to start the server and apply middleware
+connectToApollo().then(() => {
+  db.once('open', () => {
+    app.listen(PORT, () => {
+      console.log(`API server running on port ${PORT}!`);
+      console.log(`GraphQL started on: http://localhost:${PORT}${server.graphqlPath}`);
+    });
+  });
+});
